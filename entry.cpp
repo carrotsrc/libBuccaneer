@@ -24,6 +24,13 @@ int main(int argc, char *argv[])
 	rack.init();
 	rack.initEvents(NUM_EVENTS);
 	rack.start();
+	    std::map<std::string, RackoonIO::RackUnit*> units;
+	units = rack.getUnits();
+	std::map<std::string, RackoonIO::RackUnit*>::iterator it;
+	std::cout << "Loading this" << std::endl;
+	for(it = units.begin(); it != units.end(); ++it)
+	std::cout << (*it).first << std::endl;
+
 	int x;
 	cin >> x;
 }

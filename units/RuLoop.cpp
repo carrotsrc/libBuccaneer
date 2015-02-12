@@ -4,7 +4,7 @@ using namespace RackoonIO;
 #include "events/ShellEvents.h"
 
 RuLoop::RuLoop()
-: RackUnit() {
+: RackUnit(std::string("RuLoop")) {
 	addJack("audio", JACK_SEQ);
 	addPlug("audio_out");
 	workState = IDLE;

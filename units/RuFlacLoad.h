@@ -25,7 +25,6 @@ class RuFlacLoad : public RackoonIO::RackUnit
 	short *buffer, *position, *period;
 	int psize;
 
-protected:
 	void feedOut();
 	void actionLoadFile();
 	void actionNextChunk();
@@ -43,5 +42,9 @@ public:
 
 	void midiPause(int);
 	void midiLoad(int);
+
+	/* Unit Exposure */
+	void setFilename(std::string);
+	std::string getFilename();
 };
 #endif

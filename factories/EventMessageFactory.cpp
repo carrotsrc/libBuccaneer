@@ -8,6 +8,8 @@ std::unique_ptr<EventMessage> EventMessageFactory::createMessage(EventType type)
 	case FramesFinalBuffer:
 		msg = (EventMessage*) new EvFramesFinalBuffer; 
 		break;
+	case FlacLoadInit:
+		msg = (EventMessage*) new EvFlacLoadInit;
 	}
 
 	msg->msgType = type;

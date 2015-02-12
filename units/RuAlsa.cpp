@@ -3,7 +3,7 @@
 using namespace RackoonIO;
 
 RuAlsa::RuAlsa()
-: RackUnit() {
+: RackUnit(std::string("RuAlsa")) {
 	addJack("audio", JACK_SEQ);
 	workState = IDLE;
 	sampleRate = 44100;

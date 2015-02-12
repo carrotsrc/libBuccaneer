@@ -2,7 +2,7 @@
 using namespace RackoonIO;
 
 RuEcho::RuEcho()
-: RackUnit() {
+: RackUnit(std::string("RuEcho")) {
 	addJack("audio", JACK_SEQ);
 	addPlug("audio_out");
 	mDelay = 50;

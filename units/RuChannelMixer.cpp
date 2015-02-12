@@ -13,7 +13,7 @@
 
 using namespace RackoonIO;
 RuChannelMixer::RuChannelMixer()
-: RackUnit() {
+: RackUnit(std::string("RuChannelMixer")) {
 	addJack("channel_1", JACK_SEQ);
 	addJack("channel_2", JACK_SEQ);
 	addPlug("audio_out");

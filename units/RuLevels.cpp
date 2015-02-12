@@ -2,7 +2,7 @@
 
 using namespace RackoonIO;
 RuLevels::RuLevels()
-: RackUnit() {
+: RackUnit(std::string("RuLevels")) {
 	addJack("audio", JACK_SEQ);
 	addPlug("audio_out");
 	masterGain = 0.5;

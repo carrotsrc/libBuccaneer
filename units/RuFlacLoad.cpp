@@ -4,13 +4,14 @@
 using namespace RackoonIO;
 
 RuFlacLoad::RuFlacLoad()
-: RackUnit() {
+: RackUnit(std::string("RuFlacLoad")) {
 	addJack("power", JACK_AC);
 	addPlug("audio_out");
 
 	midiExportMethod(string("pause"), std::bind(&RuFlacLoad::midiPause, this, std::placeholders::_1));
 	midiExportMethod(string("load"), std::bind(&RuFlacLoad::midiLoad, this, std::placeholders::_1));
 
+	buffer = nullptr;
 
 	workState = IDLE;
 	psize = 512;
@@ -59,8 +60,12 @@ void RuFlacLoad::actionLoadFile() {
 		position += CHUNK_SIZE;
 	}
 	position = buffer;
+
+	std::unique_ptr<EventMessage> msg = createMessage(FlacLoadInit);
+	_FlacLoadInit(msg)->numFrames = count;
+	addEvent(std::move(msg));
+
 	workState = PRESTREAM;
-	workState = READY;
 	CONSOLE_MSG("RuFlacLoad", "Initialised");
 }
 
@@ -126,4 +131,15 @@ void RuFlacLoad::midiLoad(int code) {
 
 
 void RuFlacLoad::eventFinalBuffer(std::shared_ptr<EventMessage> msg) {
+}
+
+
+/* Exposed Unit */
+
+void RuFlacLoad::setFilename(std::string fname) {
+	filename = fname;
+}
+
+std::string RuFlacLoad::getFilename() {
+	return filename;
 }

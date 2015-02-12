@@ -2,7 +2,9 @@
 
 using namespace RackoonIO;
 
-RuPitchBender::RuPitchBender() : RackUnit() { addJack("audio", JACK_SEQ);
+RuPitchBender::RuPitchBender()
+: RackUnit(std::string("RuPitchBender")) { 
+	addJack("audio", JACK_SEQ);
 	addPlug("audio_out"); 
 	workState = IDLE; 
 	framesIn = framesOut = nullptr;
