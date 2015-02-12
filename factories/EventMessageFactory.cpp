@@ -10,6 +10,7 @@ std::unique_ptr<EventMessage> EventMessageFactory::createMessage(EventType type)
 		break;
 	case FlacLoadInit:
 		msg = (EventMessage*) new EvFlacLoadInit;
+		break;
 	}
 
 	msg->msgType = type;
