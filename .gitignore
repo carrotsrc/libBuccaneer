@@ -1,0 +1,9 @@
+*.o
+rackio
+racktest
+*.so
+libentry
+*.pcm
+*.raw
+env
+dbg

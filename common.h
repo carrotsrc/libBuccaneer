@@ -1,0 +1,15 @@
+#ifndef COMMON_H
+#define COMMON_H
+	#include <string>
+	#include <iostream>
+	#include <vector>
+	#include <map>
+	#include <alsa/asoundlib.h>
+	#include <pthread.h>
+	#include <thread>
+	#include <mutex>
+	#include <unistd.h>
+#include <chrono>
+
+	using namespace std;
+#endif
