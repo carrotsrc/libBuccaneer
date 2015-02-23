@@ -1,8 +1,24 @@
+/* Copyright 2015 Charlie Fyvie-Gauld
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef RUECHO_H
 #define RUECHO_H
 #include "framework/rack/RackUnit.h"
 class RuEcho : public RackoonIO::RackUnit
 {
+public:
 	enum WorkState {
 		IDLE,
 		READY,
@@ -11,6 +27,7 @@ class RuEcho : public RackoonIO::RackUnit
 		BYPASS
 	};
 
+private:
 	FILE *fp;
 
 	WorkState workState;
@@ -23,6 +40,7 @@ class RuEcho : public RackoonIO::RackUnit
 	void writeDebugPCM(short);
 
 	void midiFeedbackDecay(int);
+	std::function<void(int)> onDecayChange;
 public:
 	RuEcho();
 	RackoonIO::FeedState feed(RackoonIO::Jack*);
@@ -31,6 +49,7 @@ public:
 	RackoonIO::RackState init();
 	RackoonIO::RackState cycle();
 	void block(RackoonIO::Jack*);
+	void onDecayChangeCallback(std::function<void(int)>);
 };
 
 #endif

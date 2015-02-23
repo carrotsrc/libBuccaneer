@@ -7,3 +7,4 @@ libentry
 *.raw
 env
 dbg
+.kdev*

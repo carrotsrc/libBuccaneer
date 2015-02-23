@@ -1,3 +1,18 @@
+/* Copyright 2015 Charlie Fyvie-Gauld
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "RuFlacLoad.h"
 #define CHUNK_SIZE 0x100000
 #include "events/ShellEvents.h"
@@ -65,12 +80,16 @@ void RuFlacLoad::actionLoadFile() {
 	_FlacLoadInit(msg)->numFrames = count;
 	addEvent(std::move(msg));
 
+	if(onStateChange)
+		onStateChange(PRESTREAM);
 	workState = PRESTREAM;
 	CONSOLE_MSG("RuFlacLoad", "Initialised");
 }
 
 RackoonIO::RackState RuFlacLoad::init() {
 	workState = LOADING;
+	if(onStateChange)
+		onStateChange(workState);
 	outsource(std::bind(&RuFlacLoad::actionLoadFile, this));
 	addEventListener(FramesFinalBuffer, std::bind(&RuFlacLoad::eventFinalBuffer, this, std::placeholders::_1));
 	return RACK_UNIT_OK;
@@ -86,6 +105,8 @@ RackoonIO::RackState RuFlacLoad::cycle() {
 
 	case READY:
 		workState = LOADING_CHUNK;
+		if(onStateChange)
+			onStateChange(STREAMING);
 		outsource(std::bind(&RuFlacLoad::actionNextChunk, this));
 		break;
 
@@ -105,6 +126,8 @@ RackoonIO::RackState RuFlacLoad::cycle() {
 void RuFlacLoad::block(Jack *jack) {
 	Jack *out = getPlug("audio_out")->jack;
 	workState = PAUSED;
+	if(onStateChange)
+		onStateChange(workState);
 	out->block();
 }
 
@@ -115,8 +138,12 @@ void RuFlacLoad::midiPause(int code) {
 		} else
 		if(workState == PRESTREAM) {
 			workState = READY;
+			if(onStateChange)
+				onStateChange(workState);
 		} else {
 			workState = STREAMING;
+			if(onStateChange)
+				onStateChange(workState);
 		}
 	}
 }
@@ -142,4 +169,8 @@ void RuFlacLoad::setFilename(std::string fname) {
 
 std::string RuFlacLoad::getFilename() {
 	return filename;
+}
+
+void RuFlacLoad::cbStateChange(std::function<void(RuFlacLoad::WorkState)> cb) {
+	onStateChange = cb;
 }
