@@ -27,7 +27,6 @@ RuAlsa::RuAlsa()
 	bufSize = 2048;
 	bufLevel = 0;
 	frameBuffer = nullptr;
-	fp = fopen("pcm.raw", "wb");
 }
 
 RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
