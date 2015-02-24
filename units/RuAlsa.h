@@ -42,7 +42,6 @@ class RuAlsa : public RackoonIO::RackUnit
 	void actionInitAlsa();
 	void actionFlushBuffer();
 
-	FILE *fp;
 
 public:
 	RuAlsa();

@@ -37,6 +37,7 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 	if(j->frames + bufLevel > bufSize)
 		return FEED_WAIT;
 
+
 	if(j->flush(&period) == FEED_OK) {
 		bufLock.lock();
 		if(workState == PAUSED) {
@@ -45,8 +46,9 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 		}
 		memcpy(frameBuffer+bufLevel, period, (j->frames*sizeof(short)));
 		bufLevel += j->frames;
+		cout << period << endl;
 		bufLock.unlock();
-		free(period);
+		cacheFree(period);
 	}
 
 	return FEED_OK;
@@ -76,7 +78,6 @@ void RuAlsa::actionFlushBuffer() {
 		else
 			cerr << "Something else is fucked" << endl;
 	}
-	fwrite(frameBuffer, sizeof(short), bufLevel, fp);
 
 	std::unique_ptr<EventMessage> msg = createMessage(FramesFinalBuffer);
 	((EvFramesFinalBuffer*)(msg.get()))->frames = (short*)malloc(sizeof(short)*bufLevel);

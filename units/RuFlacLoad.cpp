@@ -41,8 +41,12 @@ void RuFlacLoad::setConfig(string config, string value) {
 }
 
 void RuFlacLoad::actionNextChunk() {
-	period = cacheAlloc(1);
+	period = nullptr;
 
+	while(period == nullptr)
+		period = cacheAlloc(1);
+
+	cout << period << endl;
 //	while(period == NULL) period = (short*)calloc(psize, sizeof(short));
 	if(count < psize) psize = count;
 	memcpy(period, position, psize<<1);
