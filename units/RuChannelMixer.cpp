@@ -89,14 +89,15 @@ FeedState RuChannelMixer::feed(Jack *jack) {
 	if(!C1_FULL || !C2_FULL) {
 		return FEED_OK;
 	} else {
-		mixedPeriod = (short*) malloc(sizeof(short)*jack->frames);
+		//mixedPeriod = (short*) malloc(sizeof(short)*jack->frames);
+		mixedPeriod = cacheAlloc(1);
 		for(int i = 0; i < jack->frames; i++) {
 			mixedPeriod[i] = ((periodC1[i]) * gainC1) +
 					 ((periodC2[i]) * gainC2);
 		}
 
-		free(periodC1);
-		free(periodC2);
+		cacheFree(periodC1);
+		cacheFree(periodC2);
 		mixerState ^= (MIXER_BUFFER ^ MIXER_C1_BUF ^ MIXER_C2_BUF );
 
 		if(out->feed(mixedPeriod) == FEED_OK) {

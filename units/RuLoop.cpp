@@ -50,7 +50,8 @@ void RuLoop::feedLoop() {
 	if(readPos + frames > loopLength)
 		bufSize = (loopLength - readPos);
 
-	short *period = (short*)malloc(frames*sizeof(short));
+	//short *period = (short*)malloc(frames*sizeof(short));
+	short *period = cacheAlloc(1);
 	memcpy(period, readPos, bufSize*sizeof(short));
 
 	if(bufSize < frames) {
@@ -68,7 +69,8 @@ void RuLoop::feedLoop() {
 			if(readPos + frames > loopLength)
 				bufSize = (loopLength - readPos);
 
-			period = (short*)malloc(frames*sizeof(short));
+			//period = (short*)malloc(frames*sizeof(short));
+			period = cacheAlloc(1);
 			memcpy(period, readPos, bufSize*sizeof(short));
 
 			if(bufSize < frames) {
