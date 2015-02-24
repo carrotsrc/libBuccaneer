@@ -15,6 +15,7 @@
  */
 #include "framework/threads/RackQueue.h"
 #include "framework/rack/Rack.h"
+#include "framework/memory/BitfieldCache.h"
 #include "factories/RackUnitFactory.h"
 #include "factories/EventMessageFactory.h"
 
@@ -34,7 +35,10 @@ int main(int argc, char *argv[])
 		rack.setConfigPath(userConfig);
 
 	std::unique_ptr<RackoonIO::RackUnitGenericFactory> factory(new RackUnitFactory());
+	
 	factory->setMessageFactory(new EventMessageFactory);
+	factory->setCacheHandler(new RackoonIO::BitfieldCache);
+
 	rack.setRackUnitFactory(std::move(factory));
 	rack.init();
 	rack.initEvents(NUM_EVENTS);
@@ -42,9 +46,6 @@ int main(int argc, char *argv[])
 	    std::map<std::string, RackoonIO::RackUnit*> units;
 	units = rack.getUnits();
 	std::map<std::string, RackoonIO::RackUnit*>::iterator it;
-	std::cout << "Loading this" << std::endl;
-	for(it = units.begin(); it != units.end(); ++it)
-	std::cout << (*it).first << std::endl;
 
 	int x;
 	cin >> x;

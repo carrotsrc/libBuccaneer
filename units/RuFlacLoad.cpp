@@ -24,7 +24,6 @@ RuFlacLoad::RuFlacLoad()
 	addPlug("audio_out");
 
 	midiExportMethod(string("pause"), std::bind(&RuFlacLoad::midiPause, this, std::placeholders::_1));
-	midiExportMethod(string("load"), std::bind(&RuFlacLoad::midiLoad, this, std::placeholders::_1));
 
 	buffer = nullptr;
 
@@ -38,13 +37,13 @@ RackoonIO::FeedState RuFlacLoad::feed(RackoonIO::Jack*jack) {
 void RuFlacLoad::setConfig(string config, string value) {
 	if(config == "filename") {
 		filename = value;
-		CONSOLE_MSG("RuFlacLoad", "Loaded file " << filename);
 	}
 }
 
 void RuFlacLoad::actionNextChunk() {
-	period = NULL;
-	while(period == NULL) period = (short*)calloc(psize, sizeof(short));
+	period = cacheAlloc(1);
+
+//	while(period == NULL) period = (short*)calloc(psize, sizeof(short));
 	if(count < psize) psize = count;
 	memcpy(period, position, psize<<1);
 	count -= psize;
@@ -53,7 +52,7 @@ void RuFlacLoad::actionNextChunk() {
 }
 
 void RuFlacLoad::actionLoadFile() {
-	CONSOLE_MSG("RuFlacLoad", "Loaded file " << filename);
+	CONSOLE_MSG("RuFlacLoad", "Loading file " << filename);
 	file = new SndfileHandle(filename.c_str());
 
 	if(file->error() > 0) {
@@ -147,15 +146,6 @@ void RuFlacLoad::midiPause(int code) {
 		}
 	}
 }
-
-void RuFlacLoad::midiLoad(int code) {
-	if(code == 127) {
-		workState = PAUSED;
-		filename = "/home/charlie/library/music/bandcamp/Desert Dwellers - Nomadic Ecstatic (2014)/Desert Dwellers - Nomadic Ecstatic- The Wandering Remixes vol 1 - 01 Wandering Sadhu (Drumspyder Remix).flac";
-		init();
-	}
-}
-
 
 void RuFlacLoad::eventFinalBuffer(std::shared_ptr<EventMessage> msg) {
 }
