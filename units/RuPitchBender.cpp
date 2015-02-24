@@ -29,8 +29,6 @@ RuPitchBender::RuPitchBender()
 	releasePeriod = nullptr;
 	nRemainder = 0;
 	MIDI_BIND("pitchBend", RuPitchBender::midiBend); 
-	fp = fopen("fp1.raw", "wb");
-	fp2 = fopen("fp2.raw", "wb");
 }
 
 RuPitchBender::~RuPitchBender() {
@@ -49,7 +47,9 @@ void RuPitchBender::overwritePeriod(short *dst, int value, int count) {
 void RuPitchBender::actionResample() {
 	bufLock.lock();
 	int usedFrames;
-	convPeriod = (short*)calloc(nNormal, sizeof(short));
+	convPeriod = cacheAlloc(1);
+	//convPeriod = (short*)calloc(nNormal, sizeof(short));
+
 	if(nRemainder) {
 		if(nRemainder <= nNormal) {
 			if(nFrames) {
@@ -144,7 +144,7 @@ FeedState RuPitchBender::feed(Jack *jack) {
 		dd = true;
 	}
 	sfMemcpy(framesIn, period, nFrames);
-	free(period);
+	cacheFree(period);
 	bufLock.unlock();
 	OUTSRC(RuPitchBender::actionResample);
 	workState = RESAMPLING;

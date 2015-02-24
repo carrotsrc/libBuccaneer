@@ -44,8 +44,6 @@ class RuPitchBender : public RackoonIO::RackUnit {
 	inline void sfMemcpy(float*,short*,int);
 	inline void fsMemcpy(short*,float*,int);
 
-	FILE *fp;
-	FILE *fp2;
 	bool dd;
 public:
 	RuPitchBender();
