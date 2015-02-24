@@ -46,7 +46,6 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 		}
 		memcpy(frameBuffer+bufLevel, period, (j->frames*sizeof(short)));
 		bufLevel += j->frames;
-		cout << period << endl;
 		bufLock.unlock();
 		cacheFree(period);
 	}

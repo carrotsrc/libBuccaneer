@@ -62,8 +62,10 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 
 	if(workState == PRIMING) {
 
-		if(feedbackPeriod == nullptr)
-			feedbackPeriod = (short*) calloc(frames, sizeof(short));
+		if(feedbackPeriod == nullptr) {
+			//feedbackPeriod = (short*) calloc(frames, sizeof(short));
+			feedbackPeriod = cacheAlloc(1);
+		}
 
 		if(dLevel + frames > (bufSize)) {
 			workState = RUNNING;
@@ -78,7 +80,8 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 	}
 
 	if(workState == RUNNING) {
-		processedPeriod = (short*)calloc(frames, sizeof(short));
+		//processedPeriod = (short*)calloc(frames, sizeof(short));
+		processedPeriod = cacheAlloc(1);
 
 		if((dLevel + frames) > (bufSize)) {
 			dLevel = 0;
@@ -89,7 +92,8 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 			*(period+i) = *(processedPeriod+i) * feedDecay;
 		}
 		memcpy(fDelay+dLevel, period, sizeof(short)*frames);
-		free(period);
+		//free(period);
+		cacheFree(period);
 
 		if(out->feed(processedPeriod) == FEED_WAIT) {
 			remainder = true;
@@ -142,7 +146,8 @@ void RuEcho::block(Jack *jack) {
 
 void RuEcho::midiFeedbackDecay(int value) {
 	feedDecay = ((0.78*value)/100);
-	onDecayChange(value);
+	if(onDecayChange)
+		onDecayChange(value);
 }
 
 void RuEcho::onDecayChangeCallback(std::function<void(int)> cb) {
