@@ -4,9 +4,11 @@ LDFLAGS= `pkg-config --libs alsa` -lpthread -L../local/lib/ -L. -lrackio `pkg-co
 LIBCFLAGS=$(CFLAGS) -fPIC -shared
 LIBLDFLAGS=-Wl,-soname,libbuccaneer.so $(LDFLAGS)
 
-LIBSOURCES := $(shell find -name '*.cpp' ! -name '*entry.cpp')
+LIBSOURCES := $(shell find -name '*.cpp' ! -name '*entry.cpp' ! -not -path 'tests')
 LIBOBJECTS=$(patsubst %.cpp, %.o, $(LIBSOURCES))
 
+TESTSOURCES := $(shell find tests/ -name '*.cpp')
+TESTOBJECTS=$(patsubst %.cpp, %, $(TESTSOURCES))
 
 $(LIBOBJECTS): %.o: %.cpp
 	$(CPP) $(LIBCFLAGS) -c $< -o $@
@@ -23,8 +25,12 @@ entry.o: $(libbuccaneer) entry.cpp
 	
 racktest: entry.o
 	$(CPP) $(CFLAGS) -lbuccaneer $(LDFLAGS) entry.o -o racktest
-	
-	
+
+$(TESTOBJECTS): %: %.cpp
+	$(CPP) $(CFLAGS) -lbuccaneer $(LDFLAGS) $< -o $@_libtest
+
+tests: $(TESTOBJECTS)
+	@echo "Build tests"
 
 clean:
 	find . -name "*.o" -type f -delete
