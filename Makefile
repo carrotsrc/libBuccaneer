@@ -4,7 +4,7 @@ LDFLAGS= `pkg-config --libs alsa` -lpthread -L../local/lib -L../rackoonio/ -L. -
 LIBCFLAGS=$(CFLAGS) -fPIC -shared
 LIBLDFLAGS=-Wl,-soname,libbuccaneer.so $(LDFLAGS)
 
-LIBSOURCES := $(shell find -name '*.cpp' ! -name '*entry.cpp' ! -not -path 'tests')
+LIBSOURCES := $(shell find -name '*.cpp' ! -name '*entry.cpp' -not -path "*tests/*")
 LIBOBJECTS=$(patsubst %.cpp, %.o, $(LIBSOURCES))
 
 TESTSOURCES := $(shell find tests/ -name '*.cpp')
