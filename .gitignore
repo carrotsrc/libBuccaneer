@@ -8,3 +8,4 @@ libentry
 env
 dbg
 .kdev*
+*_libtest
