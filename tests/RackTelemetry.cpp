@@ -13,6 +13,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "framework/Telemetry.h"
 #include "framework/threads/RackQueue.h"
 #include "framework/rack/Rack.h"
 #include "framework/memory/BitfieldCache.h"
@@ -41,6 +43,9 @@ int main(int argc, char *argv[])
 	cache->init(512, 150);
 	factory->setCacheHandler(cache);
 
+	RackoonIO::Telemetry::RackTelemetry rTelemetry(&rack);
+	rTelemetry.metricUnitCycle();
+
 	rack.setRackUnitFactory(std::move(factory));
 	rack.init();
 	rack.initEvents(NUM_EVENTS);
@@ -52,5 +57,9 @@ int main(int argc, char *argv[])
 	int x;
 	cin >> x;
 
-	cout << cache->_maxAlloc() << endl;
+	//cout << cache->_maxAlloc() << endl;
+	cout << "Peak: " << std::chrono::duration_cast<std::chrono::microseconds>(rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->peakDelta).count() <<"us" << endl;
+	cout << "Low: " << std::chrono::duration_cast<std::chrono::microseconds>(rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->lowDelta).count() << "us" << endl;
+	cout << "Avg: " << std::chrono::duration_cast<std::chrono::microseconds>(rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->avgDelta).count() << "us";
+	cout << " over " << rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->total << " cycles" << endl;
 }

@@ -1,6 +1,6 @@
 CPP=g++
 CFLAGS=-ggdb -I./ -std=c++11 -I../rackoonio -I../local/include
-LDFLAGS= `pkg-config --libs alsa` -lpthread -L../local/lib/ -L. -lrackio `pkg-config --libs sndfile alsa` -lpthread -lresample
+LDFLAGS= `pkg-config --libs alsa` -lpthread -L../local/lib -L../rackoonio/ -L. -lrackio `pkg-config --libs sndfile alsa` -lpthread -lresample
 LIBCFLAGS=$(CFLAGS) -fPIC -shared
 LIBLDFLAGS=-Wl,-soname,libbuccaneer.so $(LDFLAGS)
 
