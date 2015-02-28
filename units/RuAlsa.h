@@ -16,6 +16,7 @@
 #ifndef RUALSA_H
 #define RUALSA_H
 #include "framework/rack/RackUnit.h"
+#include "framework/buffers/DelayBuffer.h"
 class RuAlsa : public RackoonIO::RackUnit
 {
 	enum WorkState {
@@ -31,7 +32,8 @@ class RuAlsa : public RackoonIO::RackUnit
 	WorkState workState;
 	snd_pcm_t *handle;
 	unsigned int sampleRate, mLatency, bufSize, bufLevel, maxPeriods;
-	short *frameBuffer;
+	RackoonIO::Buffers::DelayBuffer<short> *frameBuffer;
+//	short *frameBuffer;
 	snd_pcm_uframes_t triggerLevel, fPeriod;
 
 	RackoonIO::FeedState feedJackAudio();

@@ -16,6 +16,7 @@
 #include "RuAlsa.h"
 #include "events/ShellEvents.h"
 using namespace RackoonIO;
+using namespace RackoonIO::Buffers;
 
 RuAlsa::RuAlsa()
 : RackUnit(std::string("RuAlsa")) {
@@ -30,11 +31,15 @@ RuAlsa::RuAlsa()
 }
 
 RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
+
 	Jack *j = getJack("audio");
 	short *period;
 	int bytes;
 
-	if(j->frames + bufLevel > bufSize)
+	//if(j->frames + bufLevel > bufSize)
+	//	return FEED_WAIT;
+	
+	if(frameBuffer->hasCapacity(j->frames) == DelayBuffer<short>::WAIT)
 		return FEED_WAIT;
 
 
@@ -44,8 +49,9 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 			CONSOLE_MSG("RuAlsa", "Unpaused");
 			workState = STREAMING;
 		}
-		memcpy(frameBuffer+bufLevel, period, (j->frames*sizeof(short)));
-		bufLevel += j->frames;
+		//memcpy(frameBuffer+bufLevel, period, (j->frames*sizeof(short)));
+		//bufLevel += j->frames;
+		frameBuffer->supply(period, j->frames);
 		bufLock.unlock();
 		cacheFree(period);
 	}
@@ -56,9 +62,8 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 void RuAlsa::setConfig(string config, string value) {
 	if(config == "unit_buffer") {
 		bufSize = (snd_pcm_uframes_t)atoi(value.c_str());
-		frameBuffer = (short*)malloc(sizeof(short)*bufSize);
-		if(frameBuffer == NULL)
-			cerr << "Failed to allocate frame buffer" << endl;
+		//frameBuffer = (short*)malloc(sizeof(short)*bufSize);
+		frameBuffer = new DelayBuffer<short>(bufSize);
 	} else if(config == "max_periods") {
 		maxPeriods = atoi(value.c_str());
 	}
@@ -67,7 +72,8 @@ void RuAlsa::setConfig(string config, string value) {
 void RuAlsa::actionFlushBuffer() {
 	bufLock.lock();
 	snd_pcm_uframes_t frames;
-	if((frames = snd_pcm_writei(handle, frameBuffer, (bufLevel>>1))) != (bufLevel>>1)) {
+	int size = frameBuffer->getLoad();
+	if((frames = snd_pcm_writei(handle, frameBuffer->flush(), (size>>1))) != (size>>1)) {
 		if(frames == -EPIPE) {
 			if(workState != PAUSED)
 				cerr << "Underrun occurred" << endl;
@@ -75,7 +81,7 @@ void RuAlsa::actionFlushBuffer() {
 			snd_pcm_recover(handle, frames, 0);
 		}
 		else
-			cerr << "Something else is fucked" << endl;
+			cerr << "Something else is screwed" << endl;
 	}
 
 	std::unique_ptr<EventMessage> msg = createMessage(FramesFinalBuffer);
@@ -192,7 +198,8 @@ void RuAlsa::actionInitAlsa() {
 	triggerLevel = snd_pcm_avail_update(handle) - (fPeriod<<1);
 
 	if(frameBuffer == nullptr)
-		frameBuffer = (short*)malloc(sizeof(short)*bufSize);
+		frameBuffer = new Buffers::DelayBuffer<short>(bufSize);
+		//frameBuffer = (short*)malloc(sizeof(short)*bufSize);
 
 	CONSOLE_MSG("RuAlsa", "Initialised");
 	workState = READY;
@@ -208,7 +215,7 @@ RackoonIO::RackState RuAlsa::cycle() {
 	snd_pcm_sframes_t currentLevel;
 	if(workState == STREAMING) {
 		currentLevel = snd_pcm_avail_update(handle);
-		if(bufLevel > 0 && currentLevel > triggerLevel) {
+		if(frameBuffer->getLoad() > 0 && currentLevel > triggerLevel) {
 			workState = FLUSHING;
 			outsource(std::bind(&RuAlsa::actionFlushBuffer, this));
 		}
@@ -216,7 +223,7 @@ RackoonIO::RackState RuAlsa::cycle() {
 		return RACK_UNIT_OK;
 	}
 
-	if(workState == PRIMING && bufLevel >= (fPeriod<<1)) {
+	if(workState == PRIMING && frameBuffer->getLoad() >= (fPeriod<<1)) {
 		workState = STREAMING;
 	}
 
