@@ -30,11 +30,13 @@ An ALSA handle and buffer which acts as the end point of a daisychain
 
 ## Building
 
+Rackscallion and the tests are two separate build scripts. Depending on whether you're in the repository root directory or the tests/ directory, the process is still the same:
+
 ` ccmake . `
 
-configure the build. If you want to build pitchbend -- which is disastriously experimental -- toggle the LIBRESAMPLE setting in the configuration.
-
 Since the includes and the library are not going to be in the usual place for the system - set the path (absolute or relative) for them respectively using RACKOONIO_LIB/INC configuration options
+
+LIBRSAMPLE setting will enable the compilation of the (disastriously experimental) PitchBend unit. Probably best to avoid building those code paths.
 
 Once it is configured and the makefile generated:
 
