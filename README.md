@@ -1,4 +1,4 @@
-![](assets/buccaneer.png?raw=true)
+![](assets/rackscallion.png?raw=true)
 
 This is a library collection of units for [RackoonIO](http://www.github.com/carrotsrc/rackoonIO/).
 

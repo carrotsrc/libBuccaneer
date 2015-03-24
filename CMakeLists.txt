@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-project (libbuccaneer)
+project (librackscallion)
 
 #config
 
@@ -50,5 +50,5 @@ set( SRC_ALL
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CFLAG}" )
 set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CFLAG}" )
 
-add_library( buccaneer SHARED ${SRC_ALL})
-target_link_libraries ( buccaneer  ${EXTRA_LIBS} )
+add_library( rackscallion SHARED ${SRC_ALL})
+target_link_libraries ( rackscallion  ${EXTRA_LIBS} )
