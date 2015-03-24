@@ -14,91 +14,106 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "RuAlsa.h"
-#include "events/ShellEvents.h"
+#include "framework/events/FrameworkMessages.h"
 using namespace RackoonIO;
 using namespace RackoonIO::Buffers;
 
+
+static void pcm_trigger_callback(snd_async_handler_t *);
+/** Set the default values */
 RuAlsa::RuAlsa()
 : RackUnit(std::string("RuAlsa")) {
 	addJack("audio", JACK_SEQ);
 	workState = IDLE;
 	sampleRate = 44100;
 	maxPeriods = 4;
-	mLatency = 5;
 	bufSize = 2048;
-	bufLevel = 0;
 	frameBuffer = nullptr;
 }
 
+/** Method that is called when there is data waiting to be fed into the unit
+ *
+ * Here we decide whether to accept the data and store it in the buffer
+ * or respond with a FEED_WAIT
+ */
 RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
-
-	Jack *j = getJack("audio");
 	short *period;
-	int bytes;
 
-	//if(j->frames + bufLevel > bufSize)
-	//	return FEED_WAIT;
-	
-	if(frameBuffer->hasCapacity(j->frames) == DelayBuffer<short>::WAIT)
-		return FEED_WAIT;
+	// here the buffer has reached capacity
+	if(frameBuffer->hasCapacity(jack->frames) == DelayBuffer<short>::WAIT)
+		return FEED_WAIT; // so response with a WAIT
 
 
-	if(j->flush(&period) == FEED_OK) {
+	// If we're here then the buffer has room
+	if(jack->flush(&period) == FEED_OK) {
 		bufLock.lock();
+		
 		if(workState == PAUSED) {
 			CONSOLE_MSG("RuAlsa", "Unpaused");
 			workState = STREAMING;
 		}
-		//memcpy(frameBuffer+bufLevel, period, (j->frames*sizeof(short)));
-		//bufLevel += j->frames;
-		frameBuffer->supply(period, j->frames);
+		frameBuffer->supply(period, jack->frames);
 		bufLock.unlock();
-		cacheFree(period);
+		cacheFree(period); // We are freeing the block of cache
+		notifyProcComplete();
 	}
 
-	return FEED_OK;
+	return FEED_OK; // We've accepted the period
 }
-
+/** Method for setting configurations
+ *
+ * This unit accepts:
+ * 	- unit_buffer : The size of the buffer (in frames)
+ * 	- max_periods : The maximum periods that can be held by ASLA
+ */
 void RuAlsa::setConfig(string config, string value) {
 	if(config == "unit_buffer") {
 		bufSize = (snd_pcm_uframes_t)atoi(value.c_str());
-		//frameBuffer = (short*)malloc(sizeof(short)*bufSize);
 		frameBuffer = new DelayBuffer<short>(bufSize);
 	} else if(config == "max_periods") {
 		maxPeriods = atoi(value.c_str());
 	}
 }
 
+/** This is am outsourced method for flushing the delay buffer
+ *
+ * This is the task that writes the delay buffer into ALSA
+ */
 void RuAlsa::actionFlushBuffer() {
 	bufLock.lock();
-	snd_pcm_uframes_t frames;
+	snd_pcm_uframes_t nFrames;
 	int size = frameBuffer->getLoad();
-	if((frames = snd_pcm_writei(handle, frameBuffer->flush(), (size>>1))) != (size>>1)) {
-		if(frames == -EPIPE) {
+	const short *frames = frameBuffer->flush();
+	if((nFrames = snd_pcm_writei(handle, frames, (size>>1))) != (size>>1)) {
+		if(nFrames == -EPIPE) {
 			if(workState != PAUSED)
 				cerr << "Underrun occurred" << endl;
 
-			snd_pcm_recover(handle, frames, 0);
+			snd_pcm_recover(handle, nFrames, 0);
 		}
 		else
 			cerr << "Something else is screwed" << endl;
 	}
-
-	std::unique_ptr<EventMessage> msg = createMessage(FramesFinalBuffer);
-	((EvFramesFinalBuffer*)(msg.get()))->frames = (short*)malloc(sizeof(short)*bufLevel);
-	memcpy(((EvFramesFinalBuffer*)(msg.get()))->frames, frameBuffer, sizeof(short)*bufLevel);
-	((EvFramesFinalBuffer*)(msg.get()))->numFrames =  bufLevel;
-	addEvent(std::move(msg));
-
-	bufLevel = 0;
+	//fwrite(frames, sizeof(short), size, fp);
 	bufLock.unlock();
+	notifyProcComplete();
 	if(workState == PAUSED)
 		return;
 
-
+	/* once it's done, set the unit back to streaming
+	 * so the buffer continued to fill up
+	 */
 	workState = STREAMING;
 }
 
+/** Intialise ALSA
+ *
+ * This method is outsourced so the initialisation
+ * can happen in parallel to the rest of the rack
+ * cycle. This frees up the rack cycle but also
+ * means we need to be more careful about what
+ * state we are in
+ */
 void RuAlsa::actionInitAlsa() {
 	snd_pcm_hw_params_t *hw_params;
 	int err, dir = 0;
@@ -199,24 +214,57 @@ void RuAlsa::actionInitAlsa() {
 
 	if(frameBuffer == nullptr)
 		frameBuffer = new Buffers::DelayBuffer<short>(bufSize);
-		//frameBuffer = (short*)malloc(sizeof(short)*bufSize);
-
+		
+	auto *func = new std::function<void(void)>(std::bind(&RuAlsa::triggerAction, this));
+	snd_async_add_pcm_handler(&cb, handle, &pcm_trigger_callback, (void*)func);
 	CONSOLE_MSG("RuAlsa", "Initialised");
+	notifyProcComplete();
 	workState = READY;
 }
 
+/** Intitialise the Unit
+ *
+ * This is called on the warm-up cycle.
+ * We don't initialise the unit here,
+ * but outsource the task
+ */
 RackoonIO::RackState RuAlsa::init() {
+
+	/* Set to INIT because the unit
+	 * won't be ready by the end
+	 * of the method. It will still
+	 * be initialising
+	 */
 	workState = INIT;
-	outsource(std::bind(&RuAlsa::actionInitAlsa, this));
+
+	/* Here the task it outsourced to the threadpool
+	 * which means the rack cycle is not being blocked
+	 */
+
+	OUTSRC(RuAlsa::actionInitAlsa);
+	/* ^^^^ that is a macro which expands to this:
+	 * 
+	 * outsource(std::bind(&RuAlsa::actionInitAlsa, this));
+	 */
+
 	return RACK_UNIT_OK;
 }
 
+/** The method on the rack cycle (After the warm-up cycle)
+ *
+ * It is important to keep track of the state since it
+ * will be changed by parallel tasks in another thread
+ */
 RackoonIO::RackState RuAlsa::cycle() {
 	snd_pcm_sframes_t currentLevel;
 	if(workState == STREAMING) {
 		currentLevel = snd_pcm_avail_update(handle);
+		// Check to see if ALSA has reached the threshold
 		if(frameBuffer->getLoad() > 0 && currentLevel > triggerLevel) {
-			workState = FLUSHING;
+			// ALSA is running out of frames! Trigger a flush
+			workState = FLUSHING; // Change state
+
+			// outsource the flushing task
 			outsource(std::bind(&RuAlsa::actionFlushBuffer, this));
 		}
 
@@ -224,6 +272,9 @@ RackoonIO::RackState RuAlsa::cycle() {
 	}
 
 	if(workState == PRIMING && frameBuffer->getLoad() >= (fPeriod<<1)) {
+		/* Here the delay buffer has been primed 
+		 * and ready to start feeding to alsa
+		 */
 		workState = STREAMING;
 	}
 
@@ -231,6 +282,11 @@ RackoonIO::RackState RuAlsa::cycle() {
 		return RACK_UNIT_OK;
 
 	if(workState == READY) {
+		/* The unit has been initialised
+		 * (by the other thread) and so
+		 * it is time to start priming 
+		 * the delay buffer.
+		 */
 		workState = PRIMING;
 	}
 
@@ -241,4 +297,13 @@ RackoonIO::RackState RuAlsa::cycle() {
 void RuAlsa::block(Jack *jack) {
 	workState = PAUSED;
 	CONSOLE_MSG("RuAlsa", "Paused");
+}
+
+void RuAlsa::triggerAction() {
+	outsource(std::bind(&RuAlsa::actionFlushBuffer, this));
+}
+
+static void pcm_trigger_callback(snd_async_handler_t *cb) {
+	auto callback = (std::function<void(void)>*)snd_async_handler_get_callback_private(cb);
+	(*callback)();
 }
