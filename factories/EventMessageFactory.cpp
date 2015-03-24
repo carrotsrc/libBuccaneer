@@ -17,7 +17,7 @@
 
 using namespace RackoonIO;
 
-std::unique_ptr<EventMessage> EventMessageFactory::createMessage(EventType type) {
+std::unique_ptr<EventMessage> EventMessageFactory::clientMessage(EventType type) {
 	EventMessage *msg = nullptr;
 	switch(type) {
 	case FramesFinalBuffer:

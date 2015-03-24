@@ -16,3 +16,6 @@ target_link_libraries ( bin/rack  ${EXTRA_LIBS} )
 
 add_executable( bin/telemetry src/Telemetry.cpp)
 target_link_libraries ( bin/telemetry  ${EXTRA_LIBS} )
+
+add_executable( bin/events src/Events.cpp)
+target_link_libraries ( bin/events  ${EXTRA_LIBS} )

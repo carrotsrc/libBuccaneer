@@ -52,6 +52,7 @@ void RuFlacLoad::actionNextChunk() {
 	count -= psize;
 	position += psize;
 	workState = STREAMING;
+	notifyProcComplete();
 }
 
 void RuFlacLoad::actionLoadFile() {
@@ -86,6 +87,8 @@ void RuFlacLoad::actionLoadFile() {
 		onStateChange(PRESTREAM);
 	workState = PRESTREAM;
 	CONSOLE_MSG("RuFlacLoad", "Initialised");
+
+	notifyProcComplete();
 }
 
 RackoonIO::RackState RuFlacLoad::init() {

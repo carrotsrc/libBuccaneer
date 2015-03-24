@@ -17,8 +17,8 @@
 #define ShellEvents_h
 #include "framework/events/EventMessage.h"
 
-#define FlacLoadInit 1
-#define FramesFinalBuffer 2
+#define FlacLoadInit 0
+#define FramesFinalBuffer 1
 
 
 #define NUM_EVENTS 4

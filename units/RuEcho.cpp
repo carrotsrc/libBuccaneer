@@ -63,7 +63,6 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 	if(workState == PRIMING) {
 
 		if(feedbackPeriod == nullptr) {
-			//feedbackPeriod = (short*) calloc(frames, sizeof(short));
 			feedbackPeriod = cacheAlloc(1);
 		}
 

@@ -1,4 +1,4 @@
-/* Copyright 2015 Charlie Fyvie-Gauld
+ /* Copyright 2015 Charlie Fyvie-Gauld
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published 
@@ -13,13 +13,35 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef EVENTMESSAGEFACTORY_H
-#define EVENTMESSAGEFACTORY_H
-#include "framework/factories/GenericEventMessageFactory.h"
+#include "factories/EventMessageFactory.h"
 #include "events/ShellEvents.h"
+#include "framework/events/EventLoop.h"
 
-class EventMessageFactory 
-: public RackoonIO::GenericEventMessageFactory {
-	std::unique_ptr<RackoonIO::EventMessage> clientMessage(RackoonIO::EventType);
-};
-#endif
+#include <chrono>
+static bool running;
+
+void clientEventCallback(std::shared_ptr<RackoonIO::EventMessage> msg) {
+	std::cout << "Callback: ";
+	std::cout << msg->msgType << std::endl;
+	running = false;
+}
+int main(int argc, char *argv[])
+{
+	EventMessageFactory factory;
+	RackoonIO::EventLoop loop;
+
+	loop.initEvents(4);
+	loop.addEventListener(FlacLoadInit, std::bind(&clientEventCallback, std::placeholders::_1));
+	loop.start();
+	running = true;
+	auto msg = factory.createMessage(FlacLoadInit);
+	loop.addEvent(std::move(msg));
+	while(running) continue;
+
+	loop.stop();
+	return 0;
+}
+
+
+
+
