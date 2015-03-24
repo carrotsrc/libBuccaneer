@@ -2,7 +2,7 @@
 
 This is a library collection of units for [RackoonIO](http://www.github.com/carrotsrc/rackoonIO/).
 
-**Temporarily out-of-sync with RackoonIO**
+**Most units working with RackoonIO -- RuLoop still dodge**
 
 ## Processing Units
 
@@ -26,6 +26,23 @@ An experimental resampler which uses libResample (see below)
 
 ### RuAlsa
 An ALSA handle and buffer which acts as the end point of a daisychain
+
+
+## Building
+
+` ccmake . `
+
+configure the build. If you want to build pitchbend -- which is disastriously experimental -- toggle the LIBRESAMPLE setting in the configuration.
+
+The
+
+` make `
+
+## Dependencies
+- librackio
+- libasound
+- libsndfile
+- libresample (optional / experimental)
 
 ## License
 

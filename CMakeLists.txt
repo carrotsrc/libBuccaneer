@@ -3,19 +3,28 @@ project (librackscallion)
 
 #config
 
-set(LIBRESAMPLE "0" CACHE CONDITIONALS "Build code that replies on libResample")
-
+set(LIBRESAMPLE "0" CACHE CONDITIONALS "Build code that relies on libResample")
+set(RACKOONIO_LIB "../rackoonio" CACHE RACKOONIO "Location of the library librackio")
+set(RACKOONIO_INC "../rackoonio" CACHE RACKOONIO "Location of the includes from RackoonIO framework")
 # Build
-set( GCC_CFLAG "-std=c++11 -fPIC -shared -ggdb -I../rackoonio" )
-set( GCC_LDFLAGS "-wl,-soname,libbuccaneer.so" )
+set( GCC_CXXFLAG "-std=c++11 -fPIC -shared -ggdb" )
+set( GCC_LDFLAG " -L${RACKOONIO_LIB} -Wl,-soname,librackscallion.so" )
 
 configure_file(
 	"${PROJECT_SOURCE_DIR}/pconfig.h.in"
 	"${PROJECT_SOURCE_DIR}/pconfig.h"
 )
 # Libs
-include_directories("${PROJECT_SOURCE_DIR}/")
-set( EXTRA_LIBS ${EXTRA_LIBS} asound pthread sndfile )
+include_directories(
+		${PROJECT_SOURCE_DIR}/ 
+		${RACKOONIO_INC}
+)
+set( EXTRA_LIBS 
+	${EXTRA_LIBS}
+	rackio
+	asound
+	pthread
+	sndfile )
 
 # Files
 set( SRC_FACTORIES 
@@ -47,8 +56,8 @@ set( SRC_ALL
 )
 
 # Integration
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CFLAG}" )
-set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CFLAG}" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CXXFLAG}" )
+set( CMAKE_SHARED_LINKER_FLAGS "${GCC_LDFLAG}" )
 
 add_library( rackscallion SHARED ${SRC_ALL})
 target_link_libraries ( rackscallion  ${EXTRA_LIBS} )
