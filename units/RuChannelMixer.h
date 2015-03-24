@@ -15,6 +15,7 @@
  */
 #ifndef RUCHANNELMIXER_H
 #define RUCHANNELMIXER_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 
 class RuChannelMixer : public RackoonIO::RackUnit {

@@ -15,6 +15,7 @@
  */
 #ifndef RUECHO_H
 #define RUECHO_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 class RuEcho : public RackoonIO::RackUnit
 {

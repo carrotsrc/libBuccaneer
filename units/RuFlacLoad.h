@@ -15,6 +15,7 @@
  */
 #ifndef RUFLACLOAD_H
 #define RUFLACLOAD_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 #include <sndfile.hh>
 class RuFlacLoad : public RackoonIO::RackUnit

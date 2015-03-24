@@ -15,6 +15,7 @@
  */
 #ifndef RUALSA_H
 #define RUALSA_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 #include "framework/buffers/DelayBuffer.h"
 class RuAlsa : public RackoonIO::RackUnit

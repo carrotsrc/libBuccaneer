@@ -27,4 +27,5 @@
 #include <chrono>
 
 	using namespace std;
+#define LIBRESAMPLE 0
 #endif

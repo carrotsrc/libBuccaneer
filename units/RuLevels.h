@@ -16,6 +16,7 @@
 #ifndef RULEVELS_H
 #define RULEVELS_H
 
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 class RuLevels : public RackoonIO::RackUnit
 {

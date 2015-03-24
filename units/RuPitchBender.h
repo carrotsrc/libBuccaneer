@@ -15,6 +15,7 @@
  */
 #ifndef RUPITCHBENDER_H
 #define RUPITCHBENDER_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 #include <libresample.h>
 class RuPitchBender : public RackoonIO::RackUnit {

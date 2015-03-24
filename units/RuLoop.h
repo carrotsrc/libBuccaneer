@@ -15,6 +15,7 @@
  */
 #ifndef RULOOP_H
 #define RULOOP_H
+#include "pconfig.h"
 #include "framework/rack/RackUnit.h"
 
 class RuLoop : RackoonIO::RackUnit {
