@@ -34,9 +34,12 @@ An ALSA handle and buffer which acts as the end point of a daisychain
 
 configure the build. If you want to build pitchbend -- which is disastriously experimental -- toggle the LIBRESAMPLE setting in the configuration.
 
-The
+Since the includes and the library are not going to be in the usual place for the system - set the path (absolute or relative) for them respectively using RACKOONIO_LIB/INC configuration options
+
+Once it is configured and the makefile generated:
 
 ` make `
+
 
 ## Dependencies
 - librackio
