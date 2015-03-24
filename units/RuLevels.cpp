@@ -51,8 +51,9 @@ FeedState RuLevels::feed(Jack *jack) {
 		processed = true;
 	}
 
-	if((fState = out->feed(period)) == FEED_OK)
+	if((fState = out->feed(period)) == FEED_OK) {
 		processed = false;
+	}
 
 	return fState;
 }
