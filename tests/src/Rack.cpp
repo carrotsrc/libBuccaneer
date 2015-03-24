@@ -35,8 +35,7 @@ int main(int argc, char *argv[])
 		rack.setConfigPath(userConfig);
 
 	std::unique_ptr<RackoonIO::RackUnitGenericFactory> factory(new RackUnitFactory());
-	
-	factory->setMessageFactory(new EventMessageFactory);
+	factory->setMessageFactory(new EventMessageFactory());
 	RackoonIO::CacheHandler *cache = new RackoonIO::BitfieldCache();
 	cache->init(512, 150);
 	factory->setCacheHandler(cache);

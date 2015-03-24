@@ -79,7 +79,11 @@ void RuFlacLoad::actionLoadFile() {
 	}
 	position = buffer;
 
-	std::unique_ptr<EventMessage> msg = createMessage(FlacLoadInit);
+	auto msg = createMessage(FlacLoadInit);
+	if(msg == nullptr) {
+		std::cerr << "Problem creating msg" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	_FlacLoadInit(msg)->numFrames = count;
 	addEvent(std::move(msg));
 
@@ -143,6 +147,7 @@ void RuFlacLoad::midiPause(int code) {
 		} else
 		if(workState == PRESTREAM) {
 			workState = READY;
+			notifyProcComplete();
 			if(onStateChange)
 				onStateChange(workState);
 		} else {
