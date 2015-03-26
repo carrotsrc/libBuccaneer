@@ -34,11 +34,9 @@ private:
 	WorkState workState;
 	unsigned int mDelay, sampleRate, bufSize, dLevel;
 	float feedDecay;
-	short *frameBuffer, *fDelay, *processedPeriod, *feedbackPeriod;
+	PcmSample *frameBuffer, *fDelay, *processedPeriod, *feedbackPeriod;
 	void add(short*, int);
 	bool remainder;
-
-	void writeDebugPCM(short);
 
 	void midiFeedbackDecay(int);
 	std::function<void(int)> onDecayChange;

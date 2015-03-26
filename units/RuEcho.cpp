@@ -27,19 +27,11 @@ RuEcho::RuEcho()
 	processedPeriod = NULL;
 	remainder = false;
 
-	MIDI_BIND("feedbackDecay", RuEcho::midiFeedbackDecay);
-}
-
-void RuEcho::writeDebugPCM(short value) {
-	short *d = (short*)calloc(256, sizeof(short));
-	for(int i = 0; i < 256; i++)
-		d[i] = value;
-	fwrite(d, sizeof(short), 256, fp);
-	free(d);
+	MidiExport("feedbackDecay", RuEcho::midiFeedbackDecay);
 }
 
 FeedState RuEcho::feed(RackoonIO::Jack *jack) {
-	short *period = NULL;
+	PcmSample *period = NULL;
 	Jack *out = getPlug("audio_out")->jack;
 	int frames = jack->frames;
 	out->frames = frames;
@@ -79,7 +71,7 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 	}
 
 	if(workState == RUNNING) {
-		//processedPeriod = (short*)calloc(frames, sizeof(short));
+
 		processedPeriod = cacheAlloc(1);
 
 		if((dLevel + frames) > (bufSize)) {
@@ -91,7 +83,7 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 			*(period+i) = *(processedPeriod+i) * feedDecay;
 		}
 		memcpy(fDelay+dLevel, period, sizeof(short)*frames);
-		//free(period);
+
 		cacheFree(period);
 
 		if(out->feed(processedPeriod) == FEED_WAIT) {
@@ -120,7 +112,7 @@ void RuEcho::setConfig(string config, string value) {
 RackState RuEcho::init() {
 	workState = PRIMING;
 	bufSize = (((sampleRate<<1)/1000)*mDelay);
-	frameBuffer = (short*) calloc(bufSize, sizeof(short));
+	frameBuffer = (PcmSample*) calloc(bufSize, sizeof(PcmSample));
 	feedbackPeriod = nullptr;
 	if(frameBuffer == NULL)
 		cout << "Error" << endl;
@@ -128,7 +120,7 @@ RackState RuEcho::init() {
 	dLevel = 0;
 	fDelay = frameBuffer;
 
-	cout << "RuEcho: Initialised" << endl;
+	UnitMsg("Initialised");
 }
 
 RackState RuEcho::cycle() {
