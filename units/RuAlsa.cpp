@@ -142,7 +142,7 @@ void RuAlsa::actionInitAlsa() {
 		return;
 	}
 
-	if ((err = snd_pcm_hw_params_set_format (handle, hw_params, SND_PCM_FORMAT_S16_LE)) < 0) {
+	if ((err = snd_pcm_hw_params_set_format (handle, hw_params, SND_PCM_FORMAT_FLOAT_LE)) < 0) {
 		cerr << "cannot set format - "
 			<< snd_strerror(err) <<  endl;
 		return;

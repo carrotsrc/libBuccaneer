@@ -1,1 +1,1 @@
-#define LIBRESAMPLE 1
+#define LIBRESAMPLE 0
