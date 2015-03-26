@@ -25,22 +25,22 @@ RuLoop::RuLoop()
 	workState = IDLE;
 	sampleRate = 44100;
 	loopBuffer = nullptr;
-	MIDI_BIND("toggleRecord", RuLoop::midiToggleRecord);
-	MIDI_BIND("toggleLoop", RuLoop::midiToggleLoop);
+	MidiExport("toggleRecord", RuLoop::midiToggleRecord);
+	MidiExport("toggleLoop", RuLoop::midiToggleLoop);
 }
 
 void RuLoop::bufferRealloc() {
 	// add another second
-	short *tmp = NULL;
+	PcmSample *tmp = NULL;
 	int offset = writePos - loopBuffer;
 	while(tmp == NULL)
-		tmp = (short*) realloc(loopBuffer, sizeof(short) * (loopCapacity + (sampleRate<<1)));
+		tmp = (PcmSample*) realloc(loopBuffer, sizeof(PcmSample) * (loopCapacity + (sampleRate<<1)));
 
 	loopBuffer = tmp;
 	writePos = loopBuffer + offset;
 	loopLength = writePos;
 	loopCapacity = loopCapacity + (sampleRate<<1);
-	cout << "Reallocated buffer to " << loopCapacity << endl;
+	UnitMsg("Reallocated buffer to " << loopCapacity);
 }
 
 void RuLoop::feedLoop() {
@@ -50,17 +50,16 @@ void RuLoop::feedLoop() {
 	if(readPos + frames > loopLength)
 		bufSize = (loopLength - readPos);
 
-	//short *period = (short*)malloc(frames*sizeof(short));
-	short *period = cacheAlloc(1);
-	memcpy(period, readPos, bufSize*sizeof(short));
+	PcmSample *period = cacheAlloc(1);
+	memcpy(period, readPos, bufSize*sizeof(PcmSample));
 
 	if(bufSize < frames) {
 		readPos = loopBuffer;
-		memcpy(period+bufSize, readPos, (frames-bufSize)*sizeof(short));
+		memcpy(period+bufSize, readPos, (frames-bufSize)*sizeof(PcmSample));
 		readPos += (frames-bufSize);
 	}
 	Jack *out = getPlug("audio_out")->jack;
-	CONSOLE_MSG("RuLoop", "Length: " << loopLength-loopBuffer);
+	UnitMsg("Length: " << loopLength-loopBuffer);
 	while(workState == LOOPING) {
 
 		if(out->feed(period) == FEED_OK) {
@@ -71,11 +70,11 @@ void RuLoop::feedLoop() {
 
 			//period = (short*)malloc(frames*sizeof(short));
 			period = cacheAlloc(1);
-			memcpy(period, readPos, bufSize*sizeof(short));
+			memcpy(period, readPos, bufSize*sizeof(PcmSample));
 
 			if(bufSize < frames) {
 				readPos = loopBuffer;
-				memcpy(period+bufSize, readPos, (frames-bufSize)*sizeof(short));
+				memcpy(period+bufSize, readPos, (frames-bufSize)*sizeof(PcmSample));
 				readPos += (frames-bufSize);
 			}
 		}
@@ -86,7 +85,7 @@ FeedState RuLoop::feed(Jack *jack) {
 	if(workState == LOOPING)
 		return FEED_WAIT;
 
-	short *period = NULL;
+	PcmSample *period = NULL;
 	Jack *out = getPlug("audio_out")->jack;
 	jack->flush(&period);
 	out->frames = jack->frames;
@@ -98,8 +97,8 @@ FeedState RuLoop::feed(Jack *jack) {
 
 RackState RuLoop::init() {
 	workState = PASSTHROUGH;
-	EVENT_LISTENER(FramesFinalBuffer, RuLoop::eventFinalBuffer);
-	cout << "RuLoop: Initialised" << endl;
+	EventListener(FramesFinalBuffer, RuLoop::eventFinalBuffer);
+	UnitMsg("Initialised");
 	return RACK_UNIT_OK;
 }
 
@@ -123,19 +122,19 @@ void RuLoop::midiToggleRecord(int value) {
 	if(workState == READY || workState == PASSTHROUGH) {
 		if(loopBuffer == nullptr) {
 			// start with a two second loop (sampleRate * 2 channels * 2 seconds)
-			loopBuffer = (short*) malloc( (sampleRate<<2) * sizeof(short));
+			loopBuffer = (PcmSample*) malloc( (sampleRate<<2) * sizeof(PcmSample));
 			loopCapacity = sampleRate<<2;
 			loopLength = readPos = writePos = loopBuffer;
 		} else {
 			loopLength = readPos = writePos = loopBuffer;
 		}
 		workState = PRIMING;
-		CONSOLE_MSG("RuLoop", "PRIMING");
+		UnitMsg("Priming");
 	}
 	else
 	if(workState == PRIMING) {
 		workState = READY;
-		CONSOLE_MSG("RuLoop", "Primed and READY");
+		UnitMsg("Primed and Ready");
 	}
 }
 
@@ -145,16 +144,16 @@ void RuLoop::midiToggleLoop(int value) {
 
 	if(workState == READY) {
 		workState = LOOPING;
-		CONSOLE_MSG("RuLoop", "LOOPING");
+		UnitMsg("Looping");
 	}
 	else if(workState == LOOPING) {
 		workState = READY;
-		CONSOLE_MSG("RuLoop", "READY");
+		UnitMsg("Ready");
 	} else
 	if(workState == PRIMING) {
 		workState = LOOPING;
-		CONSOLE_MSG("RuLoop", "Straight into READY");
-		OUTSRC(RuLoop::feedLoop);
+		UnitMsg("Straight into READY");
+		ConcurrentTask(RuLoop::feedLoop);
 	}
 }
 
@@ -164,7 +163,7 @@ void RuLoop::eventFinalBuffer(std::shared_ptr<EventMessage> msg) {
 			bufferRealloc();
 
 
-		memcpy(writePos, FFB(msg)->frames, sizeof(short)*FFB(msg)->numFrames);
+		memcpy(writePos, FFB(msg)->frames, sizeof(PcmSample)*FFB(msg)->numFrames);
 		loopLength += FFB(msg)->numFrames;
 		writePos += FFB(msg)->numFrames;
 	}

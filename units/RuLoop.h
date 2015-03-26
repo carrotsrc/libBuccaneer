@@ -29,7 +29,7 @@ class RuLoop : RackoonIO::RackUnit {
 	};
 
 	WorkState workState;
-	short *loopBuffer, *writePos, *readPos, *loopLength;
+	PcmSample *loopBuffer, *writePos, *readPos, *loopLength;
 	int sampleRate, loopCapacity, frames;
 
 	void bufferRealloc();
