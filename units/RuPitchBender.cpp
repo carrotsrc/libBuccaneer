@@ -133,7 +133,7 @@ FeedState RuPitchBender::feed(Jack *jack) {
 	if(workState == WAITING){
 		dd = true;
 	}
-	sfMemcpy(framesIn, period, nFrames);
+	memcpy(framesIn, period, nFrames*sizeof(PcmSample));
 	cacheFree(period);
 	bufLock.unlock();
 	ConcurrentTask(RuPitchBender::actionResample);
