@@ -26,7 +26,6 @@ RuFlacLoad::RuFlacLoad()
 	MidiExport("pause", RuFlacLoad::midiPause);
 
 	buffer = nullptr;
-
 	workState = IDLE;
 	psize = 512;
 
@@ -48,7 +47,7 @@ void RuFlacLoad::actionNextChunk() {
 		period = cacheAlloc(1);
 
 	if(count < psize) psize = count;
-	memcpy(period, position, psize<<1);
+	memcpy(period, position, psize*sizeof(PcmSample));
 	count -= psize;
 	position += psize;
 	workState = STREAMING;
@@ -74,7 +73,7 @@ void RuFlacLoad::actionLoadFile() {
 	buffer = (PcmSample*)calloc(bufSize, sizeof(PcmSample));
 	position = buffer;
 
-	while(file->read(position, CHUNK_SIZE) == CHUNK_SIZE) {
+	while(file->read((float*)position, CHUNK_SIZE) == CHUNK_SIZE) {
 		position += CHUNK_SIZE;
 	}
 
