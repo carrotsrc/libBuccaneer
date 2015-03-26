@@ -42,13 +42,18 @@ set( SRC_UNITS
 	units/RuLoop.cpp
 )
 
-if(RESAMPLE)
+if(LIBRESAMPLE)
+	set( LIBRESAMPLE_LIB "../local/lib" CACHE CONDITIONALS "Location of Resample if included" )
+	set( LIBRESAMPLE_INC "../local/include" CACHE CONDITIONALS "Location of Resample if included" )
 	set( EXTRA_LIBS ${EXTRA_LIBS} resample )
+	set( GCC_LDFLAG "${GCC_LDFLAG} -L${LIBRESAMPLE_LIB}" )
+	set( GCC_CXXFLAG "${GCC_CXXFLAG} -I${LIBRESAMPLE_INC}" )
 	set( SRC_UNITS 
 		${SRC_UNITS}
 		units/RuPitchBender.cpp
 	)
-endif(RESAMPLE)
+
+endif(LIBRESAMPLE)
 
 set( SRC_ALL
 	${SRC_FACTORIES}
