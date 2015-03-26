@@ -24,7 +24,7 @@ class RuChannelMixer : public RackoonIO::RackUnit {
 		INIT,
 		READY
 	};
-	short *periodC1, *periodC2, *mixedPeriod;
+	PcmSample *periodC1, *periodC2, *mixedPeriod;
 	float gainC1, gainC2;
 	WorkState workState;
 

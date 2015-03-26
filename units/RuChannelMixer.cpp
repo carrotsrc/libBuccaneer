@@ -35,12 +35,12 @@ RuChannelMixer::RuChannelMixer()
 	mixedPeriod = periodC1 = periodC2 = nullptr;
 	gainC1 = gainC2 = 1.0;
 	mixerState = MIXER_C2_ACT|MIXER_C1_ACT;
-	MIDI_BIND("channelFade", RuChannelMixer::midiFade);
+	MidiExport("channelFade", RuChannelMixer::midiFade);
 }
 
 
 FeedState RuChannelMixer::feed(Jack *jack) {
-	short *period;
+	PcmSample *period;
 
 	Jack *out = getPlug("audio_out")->jack;
 	out->frames = jack->frames;
@@ -89,7 +89,6 @@ FeedState RuChannelMixer::feed(Jack *jack) {
 	if(!C1_FULL || !C2_FULL) {
 		return FEED_OK;
 	} else {
-		//mixedPeriod = (short*) malloc(sizeof(short)*jack->frames);
 		mixedPeriod = cacheAlloc(1);
 		for(int i = 0; i < jack->frames; i++) {
 			mixedPeriod[i] = ((periodC1[i]) * gainC1) +
@@ -109,7 +108,7 @@ FeedState RuChannelMixer::feed(Jack *jack) {
 }
 RackState RuChannelMixer::init() {
 	workState = READY;
-	cout << "RuChannelMixer: Initialised" << endl;
+	UnitMsg("Initialised");
 	return RACK_UNIT_OK;
 }
 
@@ -123,7 +122,7 @@ void RuChannelMixer::setConfig(string config, string value) {
 
 void RuChannelMixer::block(Jack *jack) {
 	Jack *out = getPlug("audio_out")->jack;
-	CONSOLE_MSG("RuChannelMixer", "Block from " << jack->name);
+	UnitMsg("Block from " << jack->name);
 	if(jack->name == "channel_1")
 		mixerState ^= MIXER_C1_ACT;
 	else
