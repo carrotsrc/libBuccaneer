@@ -25,6 +25,7 @@
 
 int main(int argc, char *argv[])
 {
+#if RACK_METRICS
 	std::string userConfig = "";
 	if(argc > 0) {
 		for(int i = 0; i < argc; i++) {
@@ -62,4 +63,5 @@ int main(int argc, char *argv[])
 	cout << "Low: " << std::chrono::duration_cast<std::chrono::microseconds>(rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->lowDelta).count() << "us" << endl;
 	cout << "Avg: " << std::chrono::duration_cast<std::chrono::microseconds>(rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->avgDelta).count() << "us";
 	cout << " over " << rTelemetry.getMetrics(RackoonIO::Telemetry::RackTelemetry::UnitCycle)->total << " cycles" << endl;
+#endif
 }
