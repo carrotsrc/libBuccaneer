@@ -15,6 +15,7 @@
  */
 #ifndef RUALSA_H
 #define RUALSA_H
+#include "framework/common.h"
 #include "framework/rack/RackUnit.h"
 #include "framework/buffers/DelayBuffer.h"
 /** The unit that interfaces with ALSA
@@ -60,7 +61,7 @@ private:
 	unsigned int sampleRate, ///< Sample rate of stream
 		     bufSize, ///< The size of the delay buffer in frames
 		     maxPeriods; ///< The maximum number of periods that can be stored in the Alsa buffer
-	RackoonIO::Buffers::DelayBuffer<short> *frameBuffer; ///< The delay buffer
+	RackoonIO::Buffers::DelayBuffer<PcmSample> *frameBuffer; ///< The delay buffer
 
 	snd_pcm_uframes_t triggerLevel, ///< threshold to flush the current buffer into ALSA
 			  fPeriod; ///< The size of the period in frames

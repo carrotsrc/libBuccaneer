@@ -14,7 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "RuAlsa.h"
-#include "framework/events/FrameworkMessages.h"
 using namespace RackoonIO;
 using namespace RackoonIO::Buffers;
 
@@ -37,10 +36,10 @@ RuAlsa::RuAlsa()
  * or respond with a FEED_WAIT
  */
 RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
-	short *period;
+	PcmSample *period;
 
 	// here the buffer has reached capacity
-	if(frameBuffer->hasCapacity(jack->frames) == DelayBuffer<short>::WAIT)
+	if(frameBuffer->hasCapacity(jack->frames) == DelayBuffer<PcmSample>::WAIT)
 		return FEED_WAIT; // so response with a WAIT
 
 
@@ -49,7 +48,7 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 		bufLock.lock();
 		
 		if(workState == PAUSED) {
-			CONSOLE_MSG("RuAlsa", "Unpaused");
+			UnitMsg("Unpaused");
 			workState = STREAMING;
 		}
 		frameBuffer->supply(period, jack->frames);
@@ -69,7 +68,7 @@ RackoonIO::FeedState RuAlsa::feed(RackoonIO::Jack *jack) {
 void RuAlsa::setConfig(string config, string value) {
 	if(config == "unit_buffer") {
 		bufSize = (snd_pcm_uframes_t)atoi(value.c_str());
-		frameBuffer = new DelayBuffer<short>(bufSize);
+		frameBuffer = new DelayBuffer<PcmSample>(bufSize);
 	} else if(config == "max_periods") {
 		maxPeriods = atoi(value.c_str());
 	}
@@ -83,7 +82,7 @@ void RuAlsa::actionFlushBuffer() {
 	bufLock.lock();
 	snd_pcm_uframes_t nFrames;
 	int size = frameBuffer->getLoad();
-	const short *frames = frameBuffer->flush();
+	const PcmSample *frames = frameBuffer->flush();
 	if((nFrames = snd_pcm_writei(handle, frames, (size>>1))) != (size>>1)) {
 		if(nFrames == -EPIPE) {
 			if(workState != PAUSED)
@@ -193,7 +192,7 @@ void RuAlsa::actionInitAlsa() {
 			<< snd_strerror(err) <<  endl;
 	}
 
-	cout << "RuAlsa: Period size: " << fPeriod << endl;
+	UnitMsg("Period size: " << fPeriod);
 
 	snd_pcm_uframes_t bsize;
 	if ((err = snd_pcm_hw_params_get_buffer_size (hw_params, &bsize)) < 0) {
@@ -201,23 +200,23 @@ void RuAlsa::actionInitAlsa() {
 			<< snd_strerror(err) <<  endl;
 	}
 
-	cout << "RuAlsa: Buffer Size: " << bsize << endl;
+	UnitMsg("Buffer Size: " << bsize);
 
 	if ((err = snd_pcm_hw_params_get_rate (hw_params, &sampleRate, &dir)) < 0) {
 		cerr << "cannot get sample rate - "
 			<< snd_strerror(err) <<  endl;
 	}
 
-	cout << "RuAlsa: Sample rate: " << sampleRate << endl;
+	UnitMsg("Fs: " << sampleRate);;
 
 	triggerLevel = snd_pcm_avail_update(handle) - (fPeriod<<1);
 
 	if(frameBuffer == nullptr)
-		frameBuffer = new Buffers::DelayBuffer<short>(bufSize);
+		frameBuffer = new Buffers::DelayBuffer<PcmSample>(bufSize);
 		
 	auto *func = new std::function<void(void)>(std::bind(&RuAlsa::triggerAction, this));
 	snd_async_add_pcm_handler(&cb, handle, &pcm_trigger_callback, (void*)func);
-	CONSOLE_MSG("RuAlsa", "Initialised");
+	UnitMsg("Initialised");
 	notifyProcComplete();
 	workState = READY;
 }
@@ -296,7 +295,7 @@ RackoonIO::RackState RuAlsa::cycle() {
 
 void RuAlsa::block(Jack *jack) {
 	workState = PAUSED;
-	CONSOLE_MSG("RuAlsa", "Paused");
+	UnitMsg("Paused");
 }
 
 void RuAlsa::triggerAction() {
