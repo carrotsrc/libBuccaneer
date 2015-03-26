@@ -24,19 +24,12 @@ RuLevels::RuLevels()
 	fadeGain = 1.0;
 	processed = false;
 
-	MIDI_BIND("masterGain", RuLevels::midiMasterGain);
-	MIDI_BIND("fadeGain", RuLevels::midiFadeGain);
-}
-
-void RuLevels::writeDebugPCM(short value) {
-	short *d = (short*)calloc(256, sizeof(short));
-	for(int i = 0; i < 256; i++)
-		d[i] = value;
-	free(d);
+	MidiExport("masterGain", RuLevels::midiMasterGain);
+	MidiExport("fadeGain", RuLevels::midiFadeGain);
 }
 
 FeedState RuLevels::feed(Jack *jack) {
-	short *period = NULL;
+	PcmSample *period = NULL;
 	Jack *out = getPlug("audio_out")->jack;
 	out->frames = jack->frames;
 	if(jack->flush(&period) == FEED_BLOCKED) {
@@ -59,7 +52,7 @@ FeedState RuLevels::feed(Jack *jack) {
 }
 RackState RuLevels::init() {
 	workState = READY;
-	cout << "RuLevels: Initialised" << endl;
+	UnitMsg("Initialised");
 	return RACK_UNIT_OK;
 }
 

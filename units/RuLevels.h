@@ -31,10 +31,9 @@ class RuLevels : public RackoonIO::RackUnit
 	snd_pcm_t *handle;
 	float masterGain;
 	float fadeGain;
-	short *finalPeriod;
+	PcmSample *finalPeriod;
 	bool processed;
 
-	void writeDebugPCM(short);
 	std::function<void(int)> onFadeChange;
 	std::function<void(int)> onGainChange;
 
