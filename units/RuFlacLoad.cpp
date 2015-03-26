@@ -29,6 +29,7 @@ RuFlacLoad::RuFlacLoad()
 
 	workState = IDLE;
 	psize = 512;
+
 }
 
 RackoonIO::FeedState RuFlacLoad::feed(RackoonIO::Jack*jack) {
@@ -76,6 +77,7 @@ void RuFlacLoad::actionLoadFile() {
 	while(file->read(position, CHUNK_SIZE) == CHUNK_SIZE) {
 		position += CHUNK_SIZE;
 	}
+
 	position = buffer;
 
 	auto msg = createMessage(FlacLoadInit);

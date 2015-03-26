@@ -50,6 +50,8 @@ private:
 	void eventFinalBuffer(std::shared_ptr<RackoonIO::EventMessage>);
 	std::function<void(RuFlacLoad::WorkState)> onStateChange;
 
+	FILE *fp;
+
 public:
 	RuFlacLoad();
 	RackoonIO::FeedState feed(RackoonIO::Jack*);
