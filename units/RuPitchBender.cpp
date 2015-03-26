@@ -28,7 +28,7 @@ RuPitchBender::RuPitchBender()
 	resampler = nullptr; 
 	releasePeriod = nullptr;
 	nRemainder = 0;
-	MIDI_BIND("pitchBend", RuPitchBender::midiBend); 
+	MidiExport("pitchBend", RuPitchBender::midiBend); 
 }
 
 RuPitchBender::~RuPitchBender() {
@@ -39,7 +39,7 @@ RuPitchBender::~RuPitchBender() {
 	} 
 }
 
-void RuPitchBender::overwritePeriod(short *dst, int value, int count) {
+void RuPitchBender::overwritePeriod(PcmSample *dst, int value, int count) {
 	for(int i = 0; i < count; i++)
 		dst[i] = value;
 }
@@ -55,13 +55,13 @@ void RuPitchBender::actionResample() {
 			if(nFrames) {
 				int i;
 				for(i = 0; i < nRemainder; i++)
-					*(convPeriod+i) = (short)*(remRead+i);
+					*(convPeriod+i) = (PcmSample)*(remRead+i);
 				remRead = remainder;
 			}
 		}
 		else {
 			for(int i = 0; i < nNormal; i++)
-				*(convPeriod+i) = (short)*(remRead+i);
+				*(convPeriod+i) = (PcmSample)*(remRead+i);
 
 			remRead += nNormal;
 			nRemainder -= nNormal;
@@ -84,7 +84,7 @@ void RuPitchBender::actionResample() {
 		// get normalized period and store the remainder
 		int i;
 		for(i = 0; i < nNormal-nRemainder; i++)
-			*(convPeriod+nRemainder+i) = (short)*(framesOut+i);
+			*(convPeriod+nRemainder+i) = (PcmSample)*(framesOut+i);
 
 		int oldRem = nRemainder;
 		nRemainder = (nResampled+nRemainder-nNormal);
@@ -101,16 +101,6 @@ void RuPitchBender::actionResample() {
 
 }
 
-inline void RuPitchBender::sfMemcpy(float *dst, short *src, int size) {
-	for(int i = 0; i < size; i++)
-		dst[i] = (float) src[i];
-}
-
-inline void RuPitchBender::fsMemcpy(short *dst, float *src, int size) {
-	for(int i = 0; i < size; i++)
-		dst[i] = (short) src[i];
-}
-
 FeedState RuPitchBender::feed(Jack *jack) {
 	if(!bufLock.try_lock())
 		return FEED_WAIT;
@@ -121,7 +111,7 @@ FeedState RuPitchBender::feed(Jack *jack) {
 	}
 
 	nFrames = jack->frames;
-	short *period;
+	PcmSample *period;
 
 	jack->flush(&period);
 	if(ratio == 1) {
@@ -146,7 +136,7 @@ FeedState RuPitchBender::feed(Jack *jack) {
 	sfMemcpy(framesIn, period, nFrames);
 	cacheFree(period);
 	bufLock.unlock();
-	OUTSRC(RuPitchBender::actionResample);
+	ConcurrentTask(RuPitchBender::actionResample);
 	workState = RESAMPLING;
 
 	return FEED_OK;
@@ -155,7 +145,7 @@ FeedState RuPitchBender::feed(Jack *jack) {
 RackState RuPitchBender::init() {
 	resampler = resample_open(1, 0.92, 1.08);
 	int fwidth = resample_get_filter_width(resampler);
-	cout << "RuPitchBender: Initialised" << endl;
+	UnitMsg("Initialised");
 	workState = READY;
 	return RACK_UNIT_OK;
 }
@@ -166,7 +156,7 @@ RackState RuPitchBender::cycle() {
 		out->frames = nNormal;
 		if(out->feed(convPeriod) == FEED_OK) {
 			if(workState == FLUSH_REMAINDER) {
-				OUTSRC(RuPitchBender::actionResample);
+				ConcurrentTask(RuPitchBender::actionResample);
 				workState = REMAINDER_WAITING;
 			}
 			else

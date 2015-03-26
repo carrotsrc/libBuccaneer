@@ -31,20 +31,17 @@ class RuPitchBender : public RackoonIO::RackUnit {
 	};
 	WorkState workState;
 	int nResampled, nFrames, nRemainder, nNormal;
-	short *convPeriod, *releasePeriod;
+	PcmSample *convPeriod, *releasePeriod;
 	float *framesIn, *framesOut, *remainder, *remRead;
 	double ratio;
 	void *resampler;
 	void actionResample();
 
-	void overwritePeriod(short *, int, int);
+	void overwritePeriod(PcmSample *, int, int);
 
 	std::mutex bufLock;
 
 	void midiBend(int);
-	inline void sfMemcpy(float*,short*,int);
-	inline void fsMemcpy(short*,float*,int);
-
 	bool dd;
 public:
 	RuPitchBender();
