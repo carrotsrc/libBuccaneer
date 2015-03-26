@@ -40,7 +40,7 @@ private:
 	sf_count_t bufSize, count;
 
 	std::string filename;
-	short *buffer, *position, *period;
+	PcmSample *buffer, *position, *period;
 	int psize;
 
 	void feedOut();

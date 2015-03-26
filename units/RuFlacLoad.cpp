@@ -23,7 +23,7 @@ RuFlacLoad::RuFlacLoad()
 	addJack("power", JACK_AC);
 	addPlug("audio_out");
 
-	midiExportMethod(string("pause"), std::bind(&RuFlacLoad::midiPause, this, std::placeholders::_1));
+	MidiExport("pause", RuFlacLoad::midiPause);
 
 	buffer = nullptr;
 
@@ -46,7 +46,6 @@ void RuFlacLoad::actionNextChunk() {
 	while(period == nullptr)
 		period = cacheAlloc(1);
 
-//	while(period == NULL) period = (short*)calloc(psize, sizeof(short));
 	if(count < psize) psize = count;
 	memcpy(period, position, psize<<1);
 	count -= psize;
@@ -56,11 +55,11 @@ void RuFlacLoad::actionNextChunk() {
 }
 
 void RuFlacLoad::actionLoadFile() {
-	CONSOLE_MSG("RuFlacLoad", "Loading file " << filename);
+	UnitMsg("Loading file " << filename);
 	file = new SndfileHandle(filename.c_str());
 
 	if(file->error() > 0) {
-		CONSOLE_MSG("RuFlacLoad", "Error occured when loading file `" << filename << "` with error " << file->error());
+		UnitMsg("Error occured when loading file `" << filename << "` with error " << file->error());
 		workState = ERROR;
 		return;
 	}
@@ -71,7 +70,7 @@ void RuFlacLoad::actionLoadFile() {
 	if(buffer != nullptr)
 		free(buffer);
 
-	buffer = (short*)calloc(bufSize, sizeof(short));
+	buffer = (PcmSample*)calloc(bufSize, sizeof(short));
 	position = buffer;
 
 	while(file->read(position, CHUNK_SIZE) == CHUNK_SIZE) {
@@ -90,7 +89,7 @@ void RuFlacLoad::actionLoadFile() {
 	if(onStateChange)
 		onStateChange(PRESTREAM);
 	workState = PRESTREAM;
-	CONSOLE_MSG("RuFlacLoad", "Initialised");
+	UnitMsg("Initialised");
 
 	notifyProcComplete();
 }
@@ -99,8 +98,8 @@ RackoonIO::RackState RuFlacLoad::init() {
 	workState = LOADING;
 	if(onStateChange)
 		onStateChange(workState);
-	outsource(std::bind(&RuFlacLoad::actionLoadFile, this));
-	addEventListener(FramesFinalBuffer, std::bind(&RuFlacLoad::eventFinalBuffer, this, std::placeholders::_1));
+	ConcurrentTask(RuFlacLoad::actionLoadFile);
+	EventListener(FramesFinalBuffer, RuFlacLoad::eventFinalBuffer);
 	return RACK_UNIT_OK;
 }
 
@@ -116,7 +115,7 @@ RackoonIO::RackState RuFlacLoad::cycle() {
 		workState = LOADING_CHUNK;
 		if(onStateChange)
 			onStateChange(STREAMING);
-		outsource(std::bind(&RuFlacLoad::actionNextChunk, this));
+		ConcurrentTask(RuFlacLoad::actionNextChunk);
 		break;
 
 	case STREAMING:
@@ -124,7 +123,7 @@ RackoonIO::RackState RuFlacLoad::cycle() {
 		jack->frames = psize;
 		if(jack->feed(period) == FEED_OK) {
 			workState = LOADING_CHUNK;
-			outsource(std::bind(&RuFlacLoad::actionNextChunk, this));
+			ConcurrentTask(RuFlacLoad::actionNextChunk);
 		}
 		break;
 	}
