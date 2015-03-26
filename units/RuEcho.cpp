@@ -61,7 +61,7 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 		if(dLevel + frames > (bufSize)) {
 			workState = RUNNING;
 		} else {
-			memcpy(fDelay+dLevel, period, (frames*sizeof(short)));
+			memcpy(fDelay+dLevel, period, (frames*sizeof(PcmSample)));
 
 			if(out->feed(period) == FEED_OK)
 				dLevel += frames;
@@ -82,7 +82,7 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 			*(processedPeriod+i) = *(period+i) + *(fDelay+dLevel+i) + *(feedbackPeriod+i);
 			*(period+i) = *(processedPeriod+i) * feedDecay;
 		}
-		memcpy(fDelay+dLevel, period, sizeof(short)*frames);
+		memcpy(fDelay+dLevel, period, sizeof(PcmSample)*frames);
 
 		cacheFree(period);
 
@@ -99,7 +99,7 @@ FeedState RuEcho::feed(RackoonIO::Jack *jack) {
 
 }
 
-void RuEcho::add(short *period, int size) {
+void RuEcho::add(PcmSample *period, int size) {
 }
 
 void RuEcho::setConfig(string config, string value) {

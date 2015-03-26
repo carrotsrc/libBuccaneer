@@ -35,7 +35,7 @@ private:
 	unsigned int mDelay, sampleRate, bufSize, dLevel;
 	float feedDecay;
 	PcmSample *frameBuffer, *fDelay, *processedPeriod, *feedbackPeriod;
-	void add(short*, int);
+	void add(PcmSample*, int);
 	bool remainder;
 
 	void midiFeedbackDecay(int);

@@ -70,7 +70,7 @@ void RuFlacLoad::actionLoadFile() {
 	if(buffer != nullptr)
 		free(buffer);
 
-	buffer = (PcmSample*)calloc(bufSize, sizeof(short));
+	buffer = (PcmSample*)calloc(bufSize, sizeof(PcmSample));
 	position = buffer;
 
 	while(file->read(position, CHUNK_SIZE) == CHUNK_SIZE) {
