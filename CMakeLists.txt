@@ -7,7 +7,7 @@ set(LIBRESAMPLE "0" CACHE CONDITIONALS "Build code that relies on libResample")
 set(RACKOONIO_LIB "../rackoonio" CACHE RACKOONIO "Location of the library librackio")
 set(RACKOONIO_INC "../rackoonio" CACHE RACKOONIO "Location of the includes from RackoonIO framework")
 # Build
-set( GCC_CXXFLAG "-std=c++11 -fPIC -shared -ggdb" )
+set( GCC_CXXFLAG "-std=c++11 -fPIC -shared -ggdb -Wall" )
 set( GCC_LDFLAG " -L${RACKOONIO_LIB} -Wl,-soname,librackscallion.so" )
 
 configure_file(
