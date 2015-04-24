@@ -121,12 +121,10 @@ RackState RuEcho::init() {
 	fDelay = frameBuffer;
 
 	UnitMsg("Initialised");
+	return RACK_UNIT_OK;
 }
 
 RackState RuEcho::cycle() {
-	if(workState == RUNNING && remainder) {
-		Jack *out = getPlug("audio_out")->jack;
-	}
 	return RACK_UNIT_OK;
 }
 

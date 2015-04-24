@@ -32,6 +32,7 @@ RuFlacLoad::RuFlacLoad()
 }
 
 RackoonIO::FeedState RuFlacLoad::feed(RackoonIO::Jack*jack) {
+	return FEED_OK;
 }
 
 void RuFlacLoad::setConfig(string config, string value) {
@@ -107,6 +108,8 @@ RackoonIO::RackState RuFlacLoad::init() {
 RackoonIO::RackState RuFlacLoad::cycle() {
 	if(workState < READY)
 		return RACK_UNIT_OK;
+	
+	Jack *jack = nullptr;
 
 	switch(workState) {
 	case ERROR:
@@ -120,12 +123,19 @@ RackoonIO::RackState RuFlacLoad::cycle() {
 		break;
 
 	case STREAMING:
-		Jack *jack = getPlug("audio_out")->jack;
+		jack = getPlug("audio_out")->jack;
 		jack->frames = psize;
 		if(jack->feed(period) == FEED_OK) {
 			workState = LOADING_CHUNK;
 			ConcurrentTask(RuFlacLoad::actionNextChunk);
 		}
+		break;
+
+	case LOADING:
+	case PAUSED:
+	case LOADING_CHUNK:
+	case PRESTREAM:
+	case IDLE:
 		break;
 	}
 

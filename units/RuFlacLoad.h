@@ -43,7 +43,6 @@ private:
 	PcmSample *buffer, *position, *period;
 	int psize;
 
-	void feedOut();
 	void actionLoadFile();
 	void actionNextChunk();
 
@@ -58,6 +57,7 @@ public:
 	RackoonIO::RackState init();
 	RackoonIO::RackState cycle();
 	void block(RackoonIO::Jack*);
+	RackoonIO::FeedState feed();
 
 	void midiPause(int);
 	void midiLoad(int);
